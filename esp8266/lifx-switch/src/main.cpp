@@ -2,9 +2,7 @@
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
-
-const char *ssid = "Raspberry";
-const char *password = "Chat5w00d";
+#include "../../config/global_config.h"
 
 const uint8_t BOUNCE_DURATION = 20;
 const uint8_t MAX_LX_DEVICES = 16;
@@ -34,6 +32,7 @@ typedef struct {
     uint8_t tagged : 1;
     uint8_t origin : 2;
     uint32_t source;
+
     /* frame address */
     uint8_t target[8];
     uint8_t reserved[6];
@@ -41,6 +40,7 @@ typedef struct {
     uint8_t ack_required : 1;
     uint8_t : 6;
     uint8_t sequence;
+
     /* protocol header */
     uint64_t : 64;
     uint16_t type;
