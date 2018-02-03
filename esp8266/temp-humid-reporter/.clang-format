@@ -1,0 +1,10 @@
+﻿---
+BasedOnStyle: Chromium
+AllowShortFunctionsOnASingleLine: All
+MaxEmptyLinesToKeep: '2'
+ObjCBlockIndentWidth: '4'
+Standard: Cpp11
+TabWidth: '4'
+UseTab: Never
+
+...
