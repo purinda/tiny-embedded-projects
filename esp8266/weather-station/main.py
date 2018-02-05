@@ -3,13 +3,13 @@ import machine
 import utime as time
 import gc
 import bme280
+from Parameters import MQTTServerConfig
 
 NAME = "weather-station-1"
 STATUS_LED_PIN = 2
-MQTT_BROKER_ADDR = "10.10.0.17"
 TOPIC = b"home/sensors/" + NAME
 
-client = robust.MQTTClient(NAME, MQTT_BROKER_ADDR)
+client = robust.MQTTClient(NAME, MQTTServerConfig.BROKER_IP)
 status_led = machine.Pin(STATUS_LED_PIN, machine.Pin.OUT)
 
 i2c = machine.I2C(scl=machine.Pin(16), sda=machine.Pin(5))

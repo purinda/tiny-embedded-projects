@@ -1,6 +1,6 @@
 import network
 import gc
-from global_config import RouterConfig
+from Parameters import RouterConfig
 
 sta_if = network.WLAN(network.STA_IF)
 sta_if.active(True)
