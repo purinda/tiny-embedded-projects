@@ -1,9 +1,9 @@
 /**
  * Weather Station Application
- * Supports
+ * Supports reading and reporting of 
  *  - Temperature
  *  - Humidity
- *  - Atmosphereic preassure
+ *  - Atmosphereic pressure
  *
  * BME280 Bosch component is used alongside ESP8255
  * References

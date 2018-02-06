@@ -1,3 +1,15 @@
+"""
+    Weather Station Application
+
+    Purpose of this project is to use BME280 weather sensor to collect data and
+    send that information to MQTT server. Then applications like "Home Assistant" 
+    can use that information.
+ 
+    Supports reading and reporting of 
+    - Temperature
+    - Humidity
+    - Atmosphereic pressure
+"""
 import robust
 import machine
 import utime as time
@@ -39,7 +51,8 @@ def publish():
         checkwifi()
         v = bme.values
 
-        msg = b'{"MsgId":%u,"Mem":%u,"Temperature":%s,"Pressure":%s,"Humidity":%s}' % (count, gc.mem_free(), v[0][:-1], v[1][:-3], v[2][:-1])
+        msg = b'{"MsgId":%u,"Mem":%u,"Temperature":%s,"Pressure":%s,"Humidity":%s}' 
+            % (count, gc.mem_free(), v[0][:-1], v[1][:-3], v[2][:-1])
         client.publish(TOPIC, msg)
         
         status_led.value(1)
