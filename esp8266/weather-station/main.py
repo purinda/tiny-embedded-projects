@@ -1,5 +1,5 @@
 """
-    Weather Station Application
+    Weather Station Application (works with Home Assistant)
 
     Purpose of this project is to use BME280 weather sensor to collect data and
     send that information to MQTT server. Then applications like "Home Assistant" 
