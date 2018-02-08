@@ -51,8 +51,12 @@ def publish():
         checkwifi()
         v = bme.values
 
+<<<<<<< HEAD
         msg = b'{"MsgId":%u,"Mem":%u,"Temperature":%s,"Pressure":%s,"Humidity":%s}' 
             % (count, gc.mem_free(), v[0][:-1], v[1][:-3], v[2][:-1])
+=======
+        msg = b'{"MsgId":%u,"Mem":%u,"Temperature":%s,"Pressure":%s,"Humidity":%s}' % (count, gc.mem_free(), v[0][:-1], v[1][:-3], v[2][:-1])
+>>>>>>> 9c397f029cd9a6e92b3c9668a8d4e5d6ef34301d
         client.publish(TOPIC, msg)
         
         status_led.value(1)
