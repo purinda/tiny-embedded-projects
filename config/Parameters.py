@@ -3,4 +3,4 @@ class RouterConfig:
     PW = "<Password>"
 
 class MQTTServerConfig:
-    BROKER_IP = "10.10.0.17"
+    BROKER_IP = "mqtt.local"
