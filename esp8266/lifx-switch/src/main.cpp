@@ -16,24 +16,18 @@
  */
 
 #include <Arduino.h>
-
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
-#include "../../config/global_config.h"
-#include "lifx.h"
+#include "../../../config/parameters.h"
+#include <lifx.h>
 
 #define BOUNCE_DURATION 20;
 volatile unsigned long bounceTime = 0;
 
-byte      lxDevices[MAX_LX_DEVICES][SIZE_OF_MAC];
-IPAddress lxDevicesAddr[MAX_LX_DEVICES];
-
-IPAddress bcastAddr(255, 255, 255, 255);
-WiFiUDP   UDP;
-
 uint8_t buttonToggled = 0;
 uint8_t buttonTimeout = 0;
 uint8_t interuptPin   = 0;
+
+Lifx *lx = new Lifx();
 
 /**
  *   @brief  This function gets called when the interruptPin is "changed".
@@ -41,7 +35,7 @@ uint8_t interuptPin   = 0;
  *   @return void
  */
 void isr_p0() {
-    // it ignores presses that occur in intervals less then the bounce time
+    // Debounce functionality handled here.
     if (millis() > bounceTime) {
         // Your code here to handle new button press ?
         bounceTime = millis() + BOUNCE_DURATION; // set whatever bounce time in ms is appropriate
@@ -52,9 +46,9 @@ void isr_p0() {
     buttonToggled = !buttonToggled;
 
     if (buttonToggled == 0) {
-        lxPower(0);
+        lx->setPower(0);
     } else {
-        lxPower(65534);
+        lx->setPower(65534);
     }
 
     /* Button watching */
@@ -80,11 +74,6 @@ void isr_timeout() {
  *   @return void
  */
 void setup() {
-    uint8_t zeros[SIZE_OF_MAC] = {0};
-    for (int i = 0; i < MAX_LX_DEVICES; i++) {
-        memcpy(lxDevices[i], zeros, SIZE_OF_MAC);
-    }
-
     // Setup LIFX Master Bedroom
     lxDevices[0][0]     = 0xD0;
     lxDevices[0][1]     = 0x73;

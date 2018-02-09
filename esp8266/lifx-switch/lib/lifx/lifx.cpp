@@ -1,11 +1,24 @@
-#include "lifx.h"
+#include <lifx.h>
 
-void lx_build_frame(lx_protocol_header_t* lxHead,
+Lifx::Lifx() {
+    bcastAddr = new IPAddress(255, 255, 255, 255);
+    numLxDevices = 1;
+
+    static uint8_t zeros[Lifx::SIZE_OF_MAC] = {0};
+    for (int i = 0; i < MAX_LX_DEVICES; i++) {
+        memcpy(this->lxDevices[i], zeros, SIZE_OF_MAC);
+    }
+
+    delete zeros;
+}
+
+void Lifx::buildFrame(lx_protocol_header_t* lxHead,
     uint8_t                               extraSize,
     uint8_t                               tagged,
     uint8_t*                              target,
     uint16_t                              message) {
-    /* frame */
+
+    /* Frame */
     lxHead->size        = (uint8_t) 36 + extraSize;
     lxHead->protocol    = (uint16_t) 1024;
     lxHead->addressable = (uint8_t) 1;
@@ -13,7 +26,7 @@ void lx_build_frame(lx_protocol_header_t* lxHead,
     lxHead->origin      = (uint8_t) 0;
     lxHead->source      = (uint32_t) 3549;
 
-    /* frame address */
+    /* Frame address */
     uint8_t i = 0;
     for (i = 0; i < 8; i++) {
         lxHead->target[i] = (uint8_t) target[i];
@@ -22,28 +35,27 @@ void lx_build_frame(lx_protocol_header_t* lxHead,
     lxHead->ack_required = (uint8_t) 0;
     lxHead->sequence     = (uint8_t) 0;
 
-    /* protocol header */
+    /* Protocol header */
     lxHead->type = message;
 }
 
-
-void lx_discover() {
+void Lifx::discover() {
     /* Build lxDiscovery payload */
     byte                  target_addr[8] = {0};
     lx_protocol_header_t* lxHead;
     lxHead = (lx_protocol_header_t*) calloc(1, sizeof(lx_protocol_header_t));
-    lxMakeFrame(lxHead, 0, 1, target_addr, 2);
+    buildFrame(lxHead, 0, 1, target_addr, 2);
 
     /* Start listening for responses */
-    UDP.begin(4097);
+    this->UDP->begin(4097);
     delay(500);
 
     /* Send a couple of discovery packets out to the network*/
     for (int i = 0; i < 1; i++) {
         byte* b = (byte*) lxHead;
-        UDP.beginPacket(bcastAddr, lxPort);
-        UDP.write(b, sizeof(lx_protocol_header_t));
-        UDP.endPacket();
+        this->UDP->beginPacket(*this->bcastAddr, this->LX_PORT);
+        this->UDP->write(b, sizeof(lx_protocol_header_t));
+        this->UDP->endPacket();
 
         delay(500);
     }
@@ -51,9 +63,9 @@ void lx_discover() {
     free(lxHead);
 
     for (int j = 0; j < 20; j++) {
-        int sizePacket = UDP.parsePacket();
+        int sizePacket = this->UDP->parsePacket();
         if (sizePacket) {
-            UDP.read(packetBuffer, sizePacket);
+            this->UDP->read(packetBuffer, sizePacket);
             byte target_addr[SIZE_OF_MAC];
             memcpy(target_addr, packetBuffer + 8, SIZE_OF_MAC);
 
@@ -65,8 +77,8 @@ void lx_discover() {
 
             // Check if this device is new
             uint8_t previouslyKnownDevice = 0;
-            for (int i = 0; i < LX_DEVICES; i++) {
-                if (!memcmp(lxDevices[i], target_addr, SIZE_OF_MAC)) {
+            for (int i = 0; i < numLxDevices; i++) {
+                if (!memcmp(this->lxDevices[i], target_addr, SIZE_OF_MAC)) {
                     Serial.println("Previously seen target");
                     previouslyKnownDevice = 1;
                     break;
@@ -75,20 +87,19 @@ void lx_discover() {
 
             // Store new devices
             if (!previouslyKnownDevice) {
-                lxDevicesAddr[LX_DEVICES] = (uint32_t) UDP.remoteIP();
+                lxDevicesAddr[numLxDevices] = (uint32_t) this->UDP->remoteIP();
 
-                Serial.println(UDP.remoteIP());
-                memcpy(lxDevices[LX_DEVICES++], target_addr, SIZE_OF_MAC);
+                Serial.println(this->UDP->remoteIP());
+                memcpy(lxDevices[numLxDevices++], target_addr, SIZE_OF_MAC);
                 Serial.print("Storing device as LX_DEVICE ");
-                Serial.println(LX_DEVICES);
+                Serial.println(numLxDevices);
             }
         }
         delay(20);
     }
 }
 
-
-void lx_power(uint16_t level) {
+void Lifx::setPower(uint16_t level) {
     static bool lock;
 
     // Mutex
@@ -98,7 +109,7 @@ void lx_power(uint16_t level) {
         lock = 1;
     }
 
-    for (int i = 0; i < LX_DEVICES; i++) {
+    for (int i = 0; i < numLxDevices; i++) {
         /* Set target_addr from know lxDevices */
         byte target_addr[8] = {0};
         memcpy(target_addr, lxDevices[i], SIZE_OF_MAC);
@@ -109,19 +120,19 @@ void lx_power(uint16_t level) {
 
         lx_protocol_header_t* lxHead;
         lxHead = (lx_protocol_header_t*) calloc(1, sizeof(lx_protocol_header_t));
-        lxMakeFrame(lxHead, sizeof(lx_set_power_t), 0, target_addr, type);
+        buildFrame(lxHead, sizeof(lx_set_power_t), 0, target_addr, type);
 
         lx_set_power_t* lxSetPower;
         lxSetPower           = (lx_set_power_t*) calloc(1, sizeof(lx_set_power_t));
         lxSetPower->duration = 500;
         lxSetPower->level    = level;
 
-        UDP.beginPacket(lxDevicesAddr[i], lxPort);
+        this->UDP->beginPacket(lxDevicesAddr[i], LX_PORT);
         byte* b = (byte*) lxHead;
-        UDP.write(b, sizeof(lx_protocol_header_t));
+        this->UDP->write(b, sizeof(lx_protocol_header_t));
         b = (byte*) lxSetPower;
-        UDP.write(b, sizeof(lx_set_power_t));
-        UDP.endPacket();
+        this->UDP->write(b, sizeof(lx_set_power_t));
+        this->UDP->endPacket();
 
         free(lxSetPower);
         free(lxHead);
