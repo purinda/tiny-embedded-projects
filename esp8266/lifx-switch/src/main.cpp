@@ -37,7 +37,6 @@ Lifx *lx = new Lifx();
 void isr_p0() {
     // Debounce functionality handled here.
     if (millis() > bounceTime) {
-        // Your code here to handle new button press ?
         bounceTime = millis() + BOUNCE_DURATION; // set whatever bounce time in ms is appropriate
     } else {
         return;
@@ -74,17 +73,9 @@ void isr_timeout() {
  *   @return void
  */
 void setup() {
-    // Setup LIFX Master Bedroom
-    lxDevices[0][0]     = 0xD0;
-    lxDevices[0][1]     = 0x73;
-    lxDevices[0][2]     = 0xD5;
-    lxDevices[0][3]     = 0x26;
-    lxDevices[0][4]     = 0xB8;
-    lxDevices[0][5]     = 0x4D;
-    lxDevicesAddr[0][0] = 10;
-    lxDevicesAddr[0][1] = 10;
-    lxDevicesAddr[0][2] = 0;
-    lxDevicesAddr[0][3] = 51;
+    byte macLxBulb[6] = {0xD0, 0x73, 0xD5, 0x26, 0xB8, 0x4D};
+    IPAddress lxBulb;
+    lxBulb.fromString("10.10.0.51");
 
     Serial.begin(115200);
     delay(10);
@@ -105,17 +96,14 @@ void setup() {
 
     Serial.println("");
     Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
 
-    bcastAddr    = WiFi.localIP();
-    bcastAddr[3] = 255;
+    lx->bcastAddr    = &lxBulb;
+    lx->bcastAddr[3] = 255;
 
-    /* Setup Interupts */
+    // Setup Interupts: The switch which would turn on/off lifx bulb
     pinMode(0, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(0), isr_p0, CHANGE);
 }
-
 
 void loop() {
     // intentionally ignored due to interrupts used

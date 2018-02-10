@@ -40,8 +40,8 @@ typedef struct {
 #pragma pack(pop)
 
 class Lifx {
-     private:
-    uint8_t  numLxDevices;
+   private:
+    uint8_t               numLxDevices;
     static const uint16_t LX_PORT        = 56700;
     static const uint8_t  MAX_LX_DEVICES = 16;
     static const uint8_t  SIZE_OF_MAC    = 6;
@@ -49,18 +49,15 @@ class Lifx {
     byte       lxDevices[MAX_LX_DEVICES][SIZE_OF_MAC];
     IPAddress  lxDevicesAddr[MAX_LX_DEVICES];
     char       packetBuffer[128];
-    IPAddress* bcastAddr;
     WiFiUDP*   UDP;
 
-     public:
+   public:
+    IPAddress* bcastAddr;
+   
     Lifx();
     ~Lifx();
 
-    void buildFrame(lx_protocol_header_t* lxHead,
-        uint8_t                               extraSize,
-        uint8_t                               tagged,
-        uint8_t*                              target,
-        uint16_t                              message);
+    void buildFrame(lx_protocol_header_t* lxHead, uint8_t extraSize, uint8_t tagged, uint8_t* target, uint16_t message);
     void discover();
     void setPower(uint16_t level);
 };

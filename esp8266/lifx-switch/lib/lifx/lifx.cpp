@@ -62,8 +62,9 @@ void Lifx::discover() {
 
     free(lxHead);
 
-    for (int j = 0; j < 20; j++) {
+    for (int j = 0; j < MAX_LX_DEVICES; j++) {
         int sizePacket = this->UDP->parsePacket();
+
         if (sizePacket) {
             this->UDP->read(packetBuffer, sizePacket);
             byte target_addr[SIZE_OF_MAC];
@@ -91,11 +92,12 @@ void Lifx::discover() {
 
                 Serial.println(this->UDP->remoteIP());
                 memcpy(lxDevices[numLxDevices++], target_addr, SIZE_OF_MAC);
-                Serial.print("Storing device as LX_DEVICE ");
+                Serial.print("Storing device as Lifx:");
                 Serial.println(numLxDevices);
             }
         }
-        delay(20);
+
+        delay(50);
     }
 }
 
@@ -137,7 +139,7 @@ void Lifx::setPower(uint16_t level) {
         free(lxSetPower);
         free(lxHead);
 
-        Serial.print("Sending lxPower packet to ");
+        Serial.print("Sending power change packet to ");
         Serial.println(lxDevicesAddr[i].toString());
     }
 
