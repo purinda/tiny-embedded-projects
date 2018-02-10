@@ -1,7 +1,6 @@
 #include <lifx.h>
 
 Lifx::Lifx() {
-    bcastAddr = new IPAddress(255, 255, 255, 255);
     numLxDevices = 1;
 
     static uint8_t zeros[Lifx::SIZE_OF_MAC] = {0};
@@ -9,15 +8,15 @@ Lifx::Lifx() {
         memcpy(this->lxDevices[i], zeros, SIZE_OF_MAC);
     }
 
-    delete zeros;
+    this->UDP       = new WiFiUDP();
+    this->bcastAddr = new IPAddress(255, 255, 255, 255);
 }
 
 void Lifx::buildFrame(lx_protocol_header_t* lxHead,
-    uint8_t                               extraSize,
-    uint8_t                               tagged,
-    uint8_t*                              target,
-    uint16_t                              message) {
-
+    uint8_t                                 extraSize,
+    uint8_t                                 tagged,
+    uint8_t*                                target,
+    uint16_t                                message) {
     /* Frame */
     lxHead->size        = (uint8_t) 36 + extraSize;
     lxHead->protocol    = (uint16_t) 1024;
@@ -143,6 +142,5 @@ void Lifx::setPower(uint16_t level) {
         Serial.println(lxDevicesAddr[i].toString());
     }
 
-    Serial.println();
     lock = 0;
 }

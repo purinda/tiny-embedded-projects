@@ -19,6 +19,9 @@
 #include <ESP8266WiFi.h>
 #include "../../../config/parameters.h"
 #include <lifx.h>
+extern "C" {
+    #include "user_interface.h"
+}
 
 #define BOUNCE_DURATION 20;
 volatile unsigned long bounceTime = 0;
@@ -82,7 +85,6 @@ void setup() {
 
     // We start by connecting to a WiFi network
     Serial.println();
-    Serial.println();
     Serial.print("Connecting to ");
     Serial.println(ssid);
 
@@ -97,14 +99,20 @@ void setup() {
     Serial.println("");
     Serial.println("WiFi connected");
 
-    lx->bcastAddr    = &lxBulb;
-    lx->bcastAddr[3] = 255;
-
     // Setup Interupts: The switch which would turn on/off lifx bulb
     pinMode(0, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(0), isr_p0, CHANGE);
 }
 
 void loop() {
-    // intentionally ignored due to interrupts used
+    // Just print system info periodically
+    Serial.println();
+    Serial.println("System Info.");
+
+    uint32_t freeHeap = system_get_free_heap_size();
+    Serial.print("Heap Free (bytes): ");
+    Serial.println(freeHeap);
+
+    // 5s sleep
+    delay(5000);
 }

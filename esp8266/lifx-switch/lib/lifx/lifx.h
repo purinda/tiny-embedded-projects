@@ -41,19 +41,19 @@ typedef struct {
 
 class Lifx {
    private:
-    uint8_t               numLxDevices;
     static const uint16_t LX_PORT        = 56700;
     static const uint8_t  MAX_LX_DEVICES = 16;
     static const uint8_t  SIZE_OF_MAC    = 6;
 
-    byte       lxDevices[MAX_LX_DEVICES][SIZE_OF_MAC];
-    IPAddress  lxDevicesAddr[MAX_LX_DEVICES];
-    char       packetBuffer[128];
-    WiFiUDP*   UDP;
+    uint8_t   numLxDevices;
+    byte      lxDevices[MAX_LX_DEVICES][SIZE_OF_MAC];
+    IPAddress lxDevicesAddr[MAX_LX_DEVICES];
+    char      packetBuffer[128];
+    WiFiUDP*  UDP;
 
    public:
     IPAddress* bcastAddr;
-   
+
     Lifx();
     ~Lifx();
 
