@@ -5,6 +5,7 @@
  */
  
 
+// Digital out pins
 int ledPin1 = 0;
 int ledPin2 = 1;
 
