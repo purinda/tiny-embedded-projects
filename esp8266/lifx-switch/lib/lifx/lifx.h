@@ -60,6 +60,7 @@ class Lifx {
     void buildFrame(lx_protocol_header_t* lxHead, uint8_t extraSize, uint8_t tagged, uint8_t* target, uint16_t message);
     void discover();
     void setPower(uint16_t level);
+    void setBulb(uint8_t index, byte *mac, IPAddress ip);
 };
 
 #endif

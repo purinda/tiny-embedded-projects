@@ -17,20 +17,24 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include "../../../config/parameters.h"
 #include <lifx.h>
+#include "../../../config/parameters.h"
 extern "C" {
-    #include "user_interface.h"
+#include "user_interface.h"
 }
 
 #define BOUNCE_DURATION 20;
 volatile unsigned long bounceTime = 0;
 
-uint8_t buttonToggled = 0;
-uint8_t buttonTimeout = 0;
-uint8_t interuptPin   = 0;
+byte        lxMacAddr[]   = {0xD0, 0x73, 0xD5, 0x26, 0xB8, 0x4D};
+const char* lxIpAddr      = "10.10.0.60";
+uint8_t     buttonToggled = 0;
+uint8_t     buttonTimeout = 0;
 
-Lifx *lx = new Lifx();
+// Pin D5 is used as the switch
+uint8_t interuptPin = 14;
+
+Lifx* lx = new Lifx();
 
 /**
  *   @brief  This function gets called when the interruptPin is "changed".
@@ -61,24 +65,14 @@ void isr_p0() {
 }
 
 /**
- *   @brief  Reset ISR timeout.
- *
- *   @return void
- */
-void isr_timeout() {
-    buttonTimeout = 1;
-}
-
-/**
  *   @brief  Arduino "setup" method or boot method. Initialisation
  *           of the application should be done here.
  *
  *   @return void
  */
 void setup() {
-    byte macLxBulb[6] = {0xD0, 0x73, 0xD5, 0x26, 0xB8, 0x4D};
-    IPAddress lxBulb;
-    lxBulb.fromString("10.10.0.51");
+    IPAddress ipLxBulb;
+    ipLxBulb.fromString(lxIpAddr);
 
     Serial.begin(115200);
     delay(10);
@@ -99,9 +93,12 @@ void setup() {
     Serial.println("");
     Serial.println("WiFi connected");
 
+    // Setup the bulb which will be controlled using the switch
+    lx->setBulb(0, lxMacAddr, ipLxBulb);
+
     // Setup Interupts: The switch which would turn on/off lifx bulb
-    pinMode(0, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(0), isr_p0, CHANGE);
+    pinMode(interuptPin, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(interuptPin), isr_p0, CHANGE);
 }
 
 void loop() {

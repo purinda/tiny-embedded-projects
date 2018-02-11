@@ -144,3 +144,9 @@ void Lifx::setPower(uint16_t level) {
 
     lock = 0;
 }
+
+
+void Lifx::setBulb(uint8_t index, byte *mac, IPAddress ip) {
+    memcpy(this->lxDevices[index], mac, SIZE_OF_MAC);
+    this->lxDevicesAddr[index] = ip;
+}
