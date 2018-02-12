@@ -18,13 +18,11 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
+#include "../../config/parameters.h"
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define BME280_I2C_ADDR 0x76
 Adafruit_BME280 bme; // I2C
-
-#define WLAN_SSID "Raspberry"
-#define WLAN_PASS "Chat5w00d"
 
 WiFiClient   client;
 PubSubClient pubsubClient;
@@ -34,9 +32,8 @@ float        hum     = 0.0;
 float        diff    = 1.0;
 
 const char TEMPERATURE_FEED[] PROGMEM = "home/sensors/outdoor/temperature";
-const char PRESSURE_FEED[] PROGMEM    = "home/sensors/outdoor/pressure";
 const char HUMIDITY_FEED[] PROGMEM    = "home/sensors/outdoor/humidity";
-const char MQTT_SERVER[] PROGMEM      = "10.10.0.17";
+const char MQTT_SERVER[] PROGMEM      = "mqtt.local";
 const int  MQTT_PORT                  = 1883;
 
 void reconnect() {
@@ -63,7 +60,7 @@ void setup_wifi() {
 
     WiFi.persistent(false);
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WLAN_SSID, WLAN_PASS);
+    WiFi.begin(ssid, password);
 
     delay(1000);
     digitalWrite(LED_BUILTIN, HIGH);
