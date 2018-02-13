@@ -3,5 +3,9 @@
     "terminal.integrated.env.osx": {
         "PATH": "/Users/purinda/.platformio/penv/bin:/Users/purinda/.platformio/penv:/Users/purinda/.cargo/bin:/Users/purinda/.cargo/bin:/usr/local/opt/openssl@1.1/bin:/usr/local/opt/coreutils/libexec/gnubin:/usr/local/Cellar/php70/7.0.27_19/bin:/Users/purinda/Packages/arm-eabi-toolchain/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/VMware Fusion.app/Contents/Public:/Users/purinda/git_src/openbet-stack:/Users/purinda/bin:/usr/local/go/bin:/Users/purinda/Go/bin:/Users/purinda/.composer/vendor/bin",
         "PLATFORMIO_CALLER": "vscode"
+    },
+    "files.associations": {
+        "array": "cpp",
+        "initializer_list": "cpp"
     }
 }
