@@ -1,15 +1,9 @@
-#include <Adafruit_BME280.h>
-#include <Adafruit_Sensor.h>
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <Wire.h>
-#include "../../../config/parameters.h"
-
 /**
- * Weather Station Application
- * Supports reading and reporting of
+ * Weather Station Application that uses Blynk platform for reporting.
+ * Supports reading of
  *  - Temperature
  *  - Humidity
+ *  - Pressure
  *
  * BME280 Bosch component is used alongside ESP8255
  * References
@@ -19,31 +13,34 @@
  * http://cactus.io/hookups/sensors/barometric/bme280/hookup-arduino-to-bme280-barometric-pressure-sensor
  */
 
+#include <Adafruit_BME280.h>
+#include <Adafruit_Sensor.h>
+#include <Arduino.h>
+#include <BlynkSimpleEsp8266.h>
+#include <ESP8266WiFi.h>
+#include <Wire.h>
+#include "../../../config/parameters.h"
 
-#define SEALEVELPRESSURE_HPA (1013.25)
-#define BME280_I2C_ADDR 0x76
+#define BLYNK_PRINT Serial
+#define BLYNK_DEBUG
+
+#define SEALEVELPRESSURE_HPA (1013.25) // 1 Standard Atmosphere
+#define BME280_I2C_ADDR 0x76           // BME280 I2C address
+#define READ_FREQ 60000                // Collect sensor data every 1min and publish to Blynk
+
 Adafruit_BME280 bme; // I2C
+WiFiClient      client;
 
-WiFiClient client;
-long       lastMsg = 0;
-float      temp    = 0.0;
-float      hum     = 0.0;
-float      diff    = 1.0;
+long  lastMsg  = 0;
+float temp     = 0.0;
+float hum      = 0.0;
+float pressure = 0.0;
+float alt      = 0.0;
+float diff     = 1.0;
 
 // I2C pin config
-const uint8_t  i2c_scl = 5;
-const uint8_t  i2c_sda = 4;
-
-void setup_wifi() {
-    digitalWrite(LED_BUILTIN, LOW);
-
-    WiFi.persistent(false);
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-
-    delay(1000);
-    digitalWrite(LED_BUILTIN, HIGH);
-}
+const uint8_t i2c_scl = 5;
+const uint8_t i2c_sda = 4;
 
 void setup() {
     // Setup I2C interface
@@ -54,48 +51,47 @@ void setup() {
     delay(10);
 
     if (!bme.begin(BME280_I2C_ADDR, &Wire)) {
-        Serial.print("Ooops, no BME280 detected ... Check your wiring or I2C ADDR!");
+        Serial.print("> Ooops, no BME280 detected ... Check your wiring or I2C ADDR!");
         while (1);
     } else {
-        Serial.println("BME280 ready.");
+        Serial.println("> BME280 ready. Booting..");
     }
 
-    // Connect to WiFi access point.
-    Serial.println();
-    Serial.print("Wireless MAC: ");
+    Serial.println('> Setting up WiFi..');
+    Serial.print("\tHardware Address: ");
     Serial.println(WiFi.macAddress());
 
-    int attempt = 0;
-    setup_wifi();
+    Serial.println("\tWiFi connected");
+    Serial.print("\tIP address: ");
+    Serial.println(WiFi.localIP());
 
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-
-        if (++attempt % 20 == 0) {
-            setup_wifi();
-            Serial.printf("\nWIFI Status: %d", WiFi.status());
-        }
+    Serial.println("> Configuring Blynk ");
+    Blynk.begin(blynkAuth, ssid, password);
+    bool result = Blynk.connect();
+    if (result) {
+        Serial.println("\tBlynk connected..");
     }
 
     Serial.println();
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
-
-    delay(10000);
-}
-
-bool checkBound(float newValue, float prevValue, float maxDiff) {
-    return !isnan(newValue) && (newValue < prevValue - maxDiff || newValue > prevValue + maxDiff);
 }
 
 void loop() {
+    Blynk.run();
     long now = millis();
 
-    if (now - lastMsg > 1000) {
-        lastMsg       = now;
-        float newTemp = bme.readTemperature();
-        float newHum  = bme.readHumidity();
+    if (now - lastMsg > READ_FREQ) {
+        lastMsg = now;
+
+        temp     = bme.readTemperature();
+        hum      = bme.readHumidity();
+        pressure = bme.readPressure();
+        alt      = bme.readAltitude(SEALEVELPRESSURE_HPA);
+
+        Blynk.virtualWrite(V1, temp);
+        Blynk.virtualWrite(V2, hum);
+        Blynk.virtualWrite(V3, pressure);
+        Blynk.virtualWrite(V4, alt);
+        
+        Serial.println("> Reading sensor data and publishing to Blynk.");
     }
 }
