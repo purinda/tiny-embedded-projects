@@ -79,7 +79,7 @@ void loop() {
     Blynk.run();
     long now = millis();
 
-    if (now - lastMsg > READ_FREQ) {
+    if (!lastMsg || now - lastMsg > READ_FREQ) {
         lastMsg = now;
 
         temp     = bme.readTemperature();
