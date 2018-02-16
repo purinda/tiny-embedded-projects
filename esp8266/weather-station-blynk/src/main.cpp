@@ -19,7 +19,9 @@
 #include <BlynkSimpleEsp8266.h>
 #include <ESP8266WiFi.h>
 #include <Wire.h>
-#include "../../../config/parameters.h"
+#include <ota.h>
+#include <BlynkConfig.h>
+#include <CommonConfig.h>
 
 #define BLYNK_PRINT Serial
 #define BLYNK_DEBUG
@@ -30,6 +32,7 @@
 
 Adafruit_BME280 bme; // I2C
 WiFiClient      client;
+OTA             ota;
 
 long  lastMsg  = 0;
 float temp     = 0.0;
@@ -43,11 +46,12 @@ const uint8_t i2c_scl = 5;
 const uint8_t i2c_sda = 4;
 
 void setup() {
+    ota.setup();
+
     // Setup I2C interface
     Wire.begin(i2c_sda, i2c_scl);
 
     pinMode(LED_BUILTIN, OUTPUT);
-    Serial.begin(9600);
     delay(10);
 
     if (!bme.begin(BME280_I2C_ADDR, &Wire)) {
@@ -66,7 +70,7 @@ void setup() {
     Serial.println(WiFi.localIP());
 
     Serial.println("> Configuring Blynk ");
-    Blynk.begin(blynkAuth, ssid, password);
+    Blynk.begin(BlynkConfig::blynkAuth, CommonConfig::ssid, CommonConfig::password);
     bool result = Blynk.connect();
     if (result) {
         Serial.println("\tBlynk connected..");
@@ -76,6 +80,7 @@ void setup() {
 }
 
 void loop() {
+    ota.run();
     Blynk.run();
     long now = millis();
 
