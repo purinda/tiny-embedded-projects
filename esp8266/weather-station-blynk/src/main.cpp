@@ -28,7 +28,7 @@
 
 #define SEALEVELPRESSURE_HPA (1013.25) // 1 Standard Atmosphere
 #define BME280_I2C_ADDR 0x76           // BME280 I2C address
-#define READ_FREQ 60000                // Collect sensor data every 1min and publish to Blynk
+#define READ_FREQ 120000               // Collect sensor data every 2min and publish to Blynk
 
 Adafruit_BME280 bme; // I2C
 WiFiClient      client;

@@ -1,3 +1,3 @@
 #include "BlynkConfig.h"
 
-char* BlynkConfig::blynkAuth  = "XXXXXX";
+char* BlynkConfig::blynkAuth  = "";
