@@ -16,25 +16,29 @@
 #include <Adafruit_BME280.h>
 #include <Adafruit_Sensor.h>
 #include <Arduino.h>
+#include <BlynkConfig.h>
 #include <BlynkSimpleEsp8266.h>
+#include <CommonConfig.h>
 #include <ESP8266WiFi.h>
 #include <Wire.h>
 #include <ota.h>
-#include <BlynkConfig.h>
-#include <CommonConfig.h>
 
 #define BLYNK_PRINT Serial
 #define BLYNK_DEBUG
 
-#define SEALEVELPRESSURE_HPA (1013.25) // 1 Standard Atmosphere
-#define BME280_I2C_ADDR 0x76           // BME280 I2C address
-#define READ_FREQ 120000               // Collect sensor data every 2min and publish to Blynk
+#define SEALEVELPRESSURE_HPA 1013.25 // 1 Standard Atmosphere
+#define TEMPERATURE_OFFSET 0         // Use this variable if the sensor seems impacted by external factors.
+#define BME280_I2C_ADDR 0x76         // BME280 I2C address
+#define SLEEP_DURATION 120e6         // Sleep for 2mins
+#define WAKE_DURATION 30000          // Wake for 30 seconds after repoting data (lets OTA updates, etc)
 
 Adafruit_BME280 bme; // I2C
 WiFiClient      client;
 OTA             ota;
 
-long  lastMsg  = 0;
+volatile bool published = false;
+volatile long bootTime;
+
 float temp     = 0.0;
 float hum      = 0.0;
 float pressure = 0.0;
@@ -56,7 +60,8 @@ void setup() {
 
     if (!bme.begin(BME280_I2C_ADDR, &Wire)) {
         Serial.print("> Ooops, no BME280 detected ... Check your wiring or I2C ADDR!");
-        while (1);
+        while (1)
+            ;
     } else {
         Serial.println("> BME280 ready. Booting..");
     }
@@ -82,12 +87,12 @@ void setup() {
 void loop() {
     ota.run();
     Blynk.run();
-    long now = millis();
 
-    if (!lastMsg || now - lastMsg > READ_FREQ) {
-        lastMsg = now;
+    if (false == published) {
+        bootTime = millis();
+        digitalWrite(LED_BUILTIN, HIGH);
 
-        temp     = bme.readTemperature();
+        temp     = bme.readTemperature() + TEMPERATURE_OFFSET;
         hum      = bme.readHumidity();
         pressure = bme.readPressure();
         alt      = bme.readAltitude(SEALEVELPRESSURE_HPA);
@@ -96,7 +101,15 @@ void loop() {
         Blynk.virtualWrite(V2, hum);
         Blynk.virtualWrite(V3, pressure);
         Blynk.virtualWrite(V4, alt);
-        
+
         Serial.println("> Reading sensor data and publishing to Blynk.");
+        digitalWrite(LED_BUILTIN, LOW);
+
+        published = true;
+    }
+
+    if (true == published && (millis() - bootTime >= WAKE_DURATION)) {
+        Serial.println("> Going into a deep sleep. zzZZ");
+        ESP.deepSleep(SLEEP_DURATION);
     }
 }
