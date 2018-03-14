@@ -7,6 +7,7 @@ class CommonConfig {
     static char* password;
     static char* nodeName;
     static int   serialBaud;
+    static bool  powerSaving;
 };
 
 

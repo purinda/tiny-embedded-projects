@@ -29,21 +29,22 @@
 #define SEALEVELPRESSURE_HPA 1013.25 // 1 Standard Atmosphere
 #define TEMPERATURE_OFFSET 0         // Use this variable if the sensor seems impacted by external factors.
 #define BME280_I2C_ADDR 0x76         // BME280 I2C address
-#define SLEEP_DURATION 120e6         // Sleep for 2mins
-#define WAKE_DURATION 30000          // Wake for 30 seconds after repoting data (lets OTA updates, etc)
+
+#define SLEEP_DURATION 120e6 // Sleep for 2mins
+#define WAKE_DURATION 30000  // Wake for 30 seconds after repoting data (lets OTA updates, etc)
+#define PUBLISH_INTERVAL 30000  // Publish to Blynk every 30s
 
 Adafruit_BME280 bme; // I2C
 WiFiClient      client;
 OTA             ota;
 
 volatile bool published = false;
-volatile long bootTime;
+volatile long timestampPublished;
 
 float temp     = 0.0;
 float hum      = 0.0;
 float pressure = 0.0;
 float alt      = 0.0;
-float diff     = 1.0;
 
 // I2C pin config
 const uint8_t i2c_scl = 5;
@@ -89,7 +90,7 @@ void loop() {
     Blynk.run();
 
     if (false == published) {
-        bootTime = millis();
+        timestampPublished = millis();
         digitalWrite(LED_BUILTIN, HIGH);
 
         temp     = bme.readTemperature() + TEMPERATURE_OFFSET;
@@ -108,8 +109,21 @@ void loop() {
         published = true;
     }
 
-    if (true == published && (millis() - bootTime >= WAKE_DURATION)) {
-        Serial.println("> Going into a deep sleep. zzZZ");
-        ESP.deepSleep(SLEEP_DURATION);
+    // If power saving features are enabled 
+    if (true == CommonConfig::powerSaving) {
+        // go to deep sleep once the WAKE_DURATION is reached.
+        if (true == published && (millis() - timestampPublished >= WAKE_DURATION)) {
+            Serial.println("> Going into a deep sleep. zzZZ");
+            ESP.deepSleep(SLEEP_DURATION);
+        }
+    } else if (false == CommonConfig::powerSaving) {
+        static uint16_t last_msg;
+
+        // Once the publish interval is reached in NORMAL mode (non power-saving)
+        // set published to false
+        if (!timestampPublished || millis() - timestampPublished >= PUBLISH_INTERVAL) {
+            published = false;
+            timestampPublished = millis();
+        }
     }
 }
